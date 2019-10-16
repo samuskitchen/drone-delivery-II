@@ -12,30 +12,21 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 
-public class DomicileService implements Callable<String> {
+@Service
+public class DomicileService {
 
+    @Value("${route.output.folder}")
     private String routeOutputFolder;
 
+    @Value("${drone.limit.lunch}")
     private Integer droneLimitLunch;
-
-    private List<String> routes;
-
-    private String filePath;
-
-    public DomicileService(List<String> routes, String filePath, String routeOutputFolder, Integer droneLimitLunch) {
-        this.routes = routes;
-        this.filePath = filePath;
-        this.routeOutputFolder = routeOutputFolder;
-        this.droneLimitLunch = droneLimitLunch;
-    }
-
-    @Override
-    public String call() {
-        return  moveDrone(routes, filePath);
-    }
 
     /**
      * Translate the movement code by Cartesian vector
@@ -43,12 +34,12 @@ public class DomicileService implements Callable<String> {
      * @param routes
      * @return
      */
-    private String moveDrone(List<String> routes, String filePath){
+    @Async
+    public CompletableFuture<List<Position>> moveDrone(List<String> routes, String filePath){
 
-        String numberDrone = getNumberDrone(filePath);
         if(Util.validateNameFile(filePath) && (routes.size() > 0 && routes.size() <= droneLimitLunch)){
 
-            List<Position> positions = routes.stream().map(route -> {
+            return CompletableFuture.completedFuture(routes.stream().map(route -> {
                 Position initialPosition = new Position(0,0, Sense.NORTH);
 
                 for (char ch : route.toCharArray()) {
@@ -75,18 +66,15 @@ public class DomicileService implements Callable<String> {
                 }
 
                 return initialPosition;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toList()));
 
-            generateReport(positions, numberDrone);
         }else {
-            throw new  AppException("Invalid name file or exceeds the number of lunches : in" + numberDrone + ".txt");
+            throw new  AppException("Invalid name file or exceeds the number of lunches");
         }
-
-        return numberDrone;
     }
 
-
-    private void generateReport(List<Position> positions, java.lang.String numberDrone) {
+    @Async
+    public void generateReport(List<Position> positions, java.lang.String numberDrone) {
 
         StringBuilder report = new StringBuilder();
 
@@ -189,8 +177,5 @@ public class DomicileService implements Callable<String> {
         }
     }
 
-    private String getNumberDrone(String filePath){
-        String file = filePath.substring(filePath.lastIndexOf('/') + 1);
-        return file.substring(2,4);
-    }
+
 }

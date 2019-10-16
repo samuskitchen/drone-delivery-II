@@ -1,18 +1,17 @@
 package com.s4n.dronedeliveryII.controller;
 
-import com.s4n.dronedeliveryII.model.Position;
-import com.s4n.dronedeliveryII.model.enums.Sense;
 import com.s4n.dronedeliveryII.service.DomicileService;
 import com.s4n.dronedeliveryII.service.DroneService;
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.BDDMockito.given;

@@ -1,6 +1,7 @@
 package com.s4n.dronedeliveryII.controller;
 
 import com.s4n.dronedeliveryII.exception.AppException;
+import com.s4n.dronedeliveryII.model.Position;
 import com.s4n.dronedeliveryII.service.DomicileService;
 import com.s4n.dronedeliveryII.service.DroneService;
 import java.io.File;
@@ -9,12 +10,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.s4n.dronedeliveryII.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,9 @@ public class DomicileController {
 
     @Autowired
     private DroneService droneService;
+
+    @Autowired
+    private DomicileService domicileService;
 
     @Value("${route.entry.folder}")
     private String routeEntryFolder;
@@ -59,18 +66,20 @@ public class DomicileController {
 
             result.forEach(files -> {
 
-                List<String> routes = droneService.pathsPerFile(files);
-                Future<String> resultDrone =  executorService.submit(new DomicileService(routes, files, routeOutputFolder, droneLimitLunch));
                 try {
-                    LOGGER.info("The Drone {}, delivered all the addresses", resultDrone.get());
+                    List<String> routes = droneService.pathsPerFile(files);
+
+                    String numberDrone = Util.getNumberDrone(files);
+                    CompletableFuture<List<Position>> positions = domicileService.moveDrone(routes, files);
+
+                    domicileService.generateReport(positions.get(), numberDrone);
                 } catch (InterruptedException | ExecutionException e) {
                     LOGGER.error(e.getMessage());
                 }
+
             });
         } catch (IOException e) {
-            throw new AppException("Exception file does not meet the minimum parameters", e);
-        }finally {
-            executorService.shutdown();
+            LOGGER.error(e.getMessage());
         }
     }
 }

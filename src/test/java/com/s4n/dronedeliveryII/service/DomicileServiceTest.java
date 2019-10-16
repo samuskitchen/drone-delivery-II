@@ -27,13 +27,14 @@ public class DomicileServiceTest {
         routes = Collections.singletonList("AAAAIAAD");
         routeOutputFolder = "src/file/output/";
         droneLimitLunch = 10;
+    }
 
-        domicileService = new DomicileService(routes, filePath, routeOutputFolder, droneLimitLunch);
+
+    @Test
+    public void moveDrone() {
     }
 
     @Test
-    public void call() {
-        //then
-        domicileService.call();
+    public void generateReport() {
     }
 }
